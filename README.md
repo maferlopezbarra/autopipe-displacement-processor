@@ -63,8 +63,16 @@ python -m src.main
 ```bash
 python -m src.main --db my_database.db
 ```
-- The database must be located in: data/input
+- The database must be located in: data/input/
 
+### Specify custom parameters for elevation and seismic factor
+```bash
+python -m src.main --elevation 10300 --factor 250
+```
+- Default parameters are:
+    - Elevation: 10300
+    - Seismic factor: 250
+---
 ## Output
 - The script generates a CSV file: data/output/output.csv
 - Each support includes drift values for 4 load cases:

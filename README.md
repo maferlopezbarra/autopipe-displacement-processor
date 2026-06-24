@@ -1,112 +1,132 @@
 
 # AutoPIPE Imposed Displacements Processor
 
-A Python-based ETL (Extract–Transform–Load) tool to process AutoPIPE data using SQLite, compute displacements, and export results to CSV.
+A Python-based **ETL + API tool** to process AutoPIPE structural data using SQLite, compute seismic displacements, export results to CSV, and expose the pipeline via a FastAPI service.
 
 ---
 
 ## Overview
 
-This project extracts structural support data from a SQLite database, processes it to compute drift values, and generates formatted output for further engineering use.
+This project implements a complete data pipeline for structural engineering automation:
 
-The workflow follows a clean pipeline:
-
-- **Extract**: Read support nodes and coordinates from a database
-- **Transform**: Calculate drift values in accordance with seismic structural requirements
-- **Load**: Export results to CSV format compatible with AutoPIPE
+- Extracts support data from a SQLite database (AutoPIPE format)
+- Processes vertical coordinates to compute seismic drift values
+- Generates formatted CSV output compatible with AutoPIPE
+- Exposes the same pipeline via a REST API using FastAPI
+- Includes unit tests for core components
 
 ---
+
+## Tech Stack
+
+- Python
+- SQLite
+- FastAPI
+- Pytest
+- CSV processing
+  
+---
+
 ## Project Structure
 project/
 │
 ├── src/
-│   ├── main.py           # Entry point
-│   ├── database.py       # CLI + database path handling
-│   ├── extractors.py     # SQLite queries
-│   ├── processors.py     # Data processing and calculations
-│   └── writers.py        # CSV output generation
-│
+│   ├── main.py                       # CLI Entry point
+│   ├── api.py                        # FastAPI application
+│   ├── database.py                   # CLI configuration
+│   ├── extractors.py                 # SQLite queries
+│   ├── processors.py                 # Engineering calculations
+│   ├── writers.py                    # CSV output generation
+│   └── services/
+│       └── displacement_service.py   # API business logic
 ├── tests/
 │   ├── test_extractors.py
 │   ├── test_processors.py
 │   └── test_writers.py
 │
 ├── data/
-│   ├── input/            # Input database files
-│   └── output/           # Generated CSV files
+│   ├── input/                        # Input database files
+│   └── output/                       # Generated CSV files
 │
 └── README.md
 
 ---
 
-## Requirements
+## Installation
 
-- Python 3.9+
-
-Optional (for testing):
+Create enviroment:
 
 ```bash
-pip install pytest
+python -m venv .venv
 ```
+Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
 ---
 
 ## Usage
 
-### Run the program
+### Run CLI pipeline
 
 From the project root:
 
 ```bash
 python -m src.main
 ```
-### Specify a custom database file
+
+### Custom parameters
 ```bash
-python -m src.main --db my_database.db
+python -m src.main --db my_database.db --elevation 10300 --factor 250
 ```
 - The database must be located in: data/input/
 
-### Specify custom parameters for elevation and seismic factor
-```bash
-python -m src.main --elevation 10300 --factor 250
-```
-- Default parameters are:
-    - Elevation: 10300
-    - Seismic factor: 250
+### Output
+data/output/output.csv
+
 ---
-## Output
-- The script generates a CSV file: data/output/output.csv
-- Each support includes drift values for 4 load cases:
-  - E11
-  - E13
-  - E12
-  - E14
 
-## How It Works
+## Run API
+Start server:
 
-### Extract
-Retrieves node coordinates from the SQLite database using a JOIN between support and point tables.
-
-### Transform
-Dirft is calculated using:
 ```bach
-drift = ceil((Z - 10300) / 250)
+uvicorn src.api:app --reload
 ```
-- Parameters 10300 and 250 have been implemented per default and can be costumized.
-- Negative values are clamped to 0
+API documentation:
+- http://127.0.0.1:8000/docs
 
-### Load
-Writes results into a CSV file formatted for AutoPIPE import.
+Endpoint:
+GET /displacements
 
-## Features
-- Clean modular design
-- CLI support with argparse
-- SQLite integration
-- No external dependencies
-- Fully testable pipeline
-- Automatic output directory creation
+Example:
+/displacements?db=input.db&elevation=10300&factor=250
+
+---
+
+## Testing
+Run:
+
+```bach
+pytest
+```
+
+## Engineering Logic
+Drift calculation:
+
+```Python
+drift = ceil((Z - elevation) / factor)
+```
+Negative drift values are set to zero.
+
+## Purpose
+This project demonstrates:
+- Python backend development
+- ETL pipeline design
+- SQL data extraction
+- API development
+- Automated testing
 
 ## Autor
 Maria Fernanda Lopez Barra
 
-## License
-This project is for educational and engineering automation purposes.

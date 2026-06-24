@@ -1,7 +1,7 @@
-from extractors import support_coordinates
-from processors import displacements
-from writers import repeat
-from database import get_config
+from src.extractors import support_coordinates
+from src.processors import displacements
+from src.writers import repeat
+from src.database import get_config
 
 
 

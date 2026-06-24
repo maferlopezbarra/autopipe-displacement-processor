@@ -1,7 +1,7 @@
 import math
 
 
-def displacements(supports: list[tuple], elevation, factor) -> list[dict]:
+def displacements(supports: list[tuple], elevation: float, factor: float) -> list[dict]:
     nodes = []
 
     for node in supports:

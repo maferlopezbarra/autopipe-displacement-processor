@@ -37,7 +37,8 @@ SQLite (.db) → Extract → Transform → CSV Output
 ---
 
 ## Project Structure
-project/
+
+autopipe-displacement-processor/
 │
 ├── src/
 │   ├── main.py                 # CLI Entry point

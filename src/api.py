@@ -5,7 +5,7 @@ from pathlib import Path
 import os
 
 from src.services.pipeline import run_pipeline
-from src.services.validation_service import run_validation
+from src.services.validation import run_validation
 from src.services.temporary import temp_write, temp_output
 
 

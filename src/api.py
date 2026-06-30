@@ -1,11 +1,13 @@
-from fastapi import FastAPI, Form, File, UploadFile, BackgroundTasks, HTTPException
+from fastapi import FastAPI, Form, File, UploadFile, BackgroundTasks
 from fastapi.responses import FileResponse
 from pathlib import Path
-import tempfile
+
 import os
 
-from src.services.displacement_service import run_displacements
-from src.writers import repeat
+from src.services.pipeline import run_pipeline
+from src.services.validation_service import run_validation
+from src.services.temporary import temp_write, temp_output
+
 
 app = FastAPI()
 
@@ -18,28 +20,20 @@ def health():
 
 
 @app.post("/displacements")
-async def run_pipeline(
+async def calculate_displacements(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     elevation: float = Form(default=10300),
     factor: float = Form(default=250)
 ):
-    if not file.filename.endswith(".db"):
-        raise HTTPException(
-            status_code=400,
-            detail="Only .db files are accepted"
-        )
     
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as tmp:
-        tmp.write(await file.read())
-        tmp.flush()
-        tmp_path = tmp.name
-    
-    output_path = Path(tempfile.NamedTemporaryFile(delete=False, suffix=".csv").name)
+    run_validation(file)
 
-    nodes = run_displacements(tmp_path, elevation, factor)
+    tmp_path = await temp_write(file)
+    output_path = temp_output()
+
+    run_pipeline(tmp_path, elevation, factor, output_path)
     
-    repeat(nodes, output_path)
     background_tasks.add_task(os.remove,tmp_path)
     background_tasks.add_task(os.remove, output_path)
     

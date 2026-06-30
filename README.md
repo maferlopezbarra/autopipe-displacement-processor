@@ -3,17 +3,26 @@
 
 A Python-based **ETL + API tool** to process AutoPIPE structural data using SQLite, compute seismic displacements, export results to CSV, and expose the pipeline via a FastAPI service.
 
+The project provides:
+- A CLI pipeline for local processing
+- A FastAPI REST API for database upload and CSV download
+- Automated tests for core modules
+
 ---
 
 ## Overview
 
-This project implements a complete data pipeline for structural engineering automation:
+This tool automates the extraction and transformation of structural support data from AutoPIPE databases to provide imposed displacements file.
 
-- Extracts support data from a SQLite database (AutoPIPE format)
-- Processes vertical coordinates to compute seismic drift values
-- Generates formatted CSV output compatible with AutoPIPE
-- Exposes the same pipeline via a REST API using FastAPI
-- Includes unit tests for core components
+Workflow:
+
+1. Extracts support data from a SQLite database
+2. Calculate seismic drift values
+3. Generates formatted CSV output compatible with AutoPIPE
+
+Pipeline:
+
+SQLite (.db) → Extract → Transform → CSV Output
 
 ---
 
@@ -31,22 +40,24 @@ This project implements a complete data pipeline for structural engineering auto
 project/
 │
 ├── src/
-│   ├── main.py                       # CLI Entry point
-│   ├── api.py                        # FastAPI application
-│   ├── database.py                   # CLI configuration
-│   ├── extractors.py                 # SQLite queries
-│   ├── processors.py                 # Engineering calculations
-│   ├── writers.py                    # CSV output generation
+│   ├── main.py                 # CLI Entry point
+│   ├── api.py                  # FastAPI application
+│   ├── database.py             # CLI configuration
+│   ├── extractors.py           # SQLite data extraction
+│   ├── processors.py           # Engineering calculations
+│   ├── writers.py              # CSV generation
 │   └── services/
-│       └── displacement_service.py   # API business logic
+│       ├── pipeline.py         # Pipeline orchestration
+|       ├── temporary.py        # Temporary file handling
+|       └── validation.py       # API file validation
 ├── tests/
 │   ├── test_extractors.py
 │   ├── test_processors.py
 │   └── test_writers.py
 │
 ├── data/
-│   ├── input/                        # Input database files
-│   └── output/                       # Generated CSV files
+│   ├── input/                  # CLI input databases
+│   └── output/                 # CLI generated files
 │
 └── README.md
 
@@ -54,79 +65,144 @@ project/
 
 ## Installation
 
-Create enviroment:
+Create environment:
 
 ```bash
 python -m venv .venv
 ```
+
+Activate (Windows):
+
+```bash
+.venv\Scripts\activate
+```
+
 Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ---
 
-## Usage
+## CLI Usage
 
-### Run CLI pipeline
 
-From the project root:
+The CLI processes databases located in:
+
+```
+data/input/
+```
+
+Run From the project root:
 
 ```bash
 python -m src.main
 ```
 
-### Custom parameters
+Custom parameters:
+
 ```bash
 python -m src.main --db my_database.db --elevation 10300 --factor 250
 ```
-- The database must be located in: data/input/
 
-### Output
+Output:
+
+```
 data/output/output.csv
+```
 
 ---
 
-## Run API
+## API Usage
+
 Start server:
 
-```bach
+```bash
 uvicorn src.api:app --reload
 ```
-API documentation:
-- http://127.0.0.1:8000/docs
 
-Endpoint:
-GET /displacements
+API documentation:
+
+```
+http://127.0.0.1:8000/docs
+```
+---
+
+### Endpoint:
+
+POST /displacements
+
+Upload an AutoPIPE SQLite database and receive the generated CSV file.
+
+Form parameters:
+
+- file: SQLite .db file
+- elevation: level 0 elevation
+- factor: seismic factor
 
 Example:
-/displacements?db=input.db&elevation=10300&factor=250
+
+```bash
+curl -X POST \
+http://127.0.0.1:8000/displacements \
+-F "file=@input.db" \
+-F "elevation=10300" \
+-F "factor=250"
+```
+
+Response:
+
+```
+output.csv
+```
+
+---
+
+## Engineering Calculation
+
+Drift calculation:
+
+```python
+drift = ceil((Z - elevation) / factor)
+```
+
+Negative values are limited to zero.
+
+Generated load cases:
+
+- E11
+- E13
+- E12
+- E14
 
 ---
 
 ## Testing
+
 Run:
 
-```bach
+```bash
 pytest
 ```
 
-## Engineering Logic
-Drift calculation:
+Test cover:
 
-```Python
-drift = ceil((Z - elevation) / factor)
-```
-Negative drift values are set to zero.
+- SQLite extraction
+- Drift calculation
+- CSV generation
+
+---
 
 ## Purpose
+
 This project demonstrates:
-- Python backend development
 - ETL pipeline design
-- SQL data extraction
-- API development
+- SQLite data processing
+- FastAPI backend development
+- File upload handling
 - Automated testing
 
-## Autor
+## Author
 Maria Fernanda Lopez Barra
 
